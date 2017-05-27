@@ -117,6 +117,7 @@ public class ComputeExample : MonoBehaviour {
 		SetData();
 
 		//Actually run the compute shader to update our Particle Data
+		//Note the 10, 10, 10 parameters - these are how many thread groups to run, and this must match the number of thread groups we define at the top of our compute shader
 		compute.Dispatch(KernelIndex, 10, 10, 10);
 
 		//And then draw it using our graphics material.

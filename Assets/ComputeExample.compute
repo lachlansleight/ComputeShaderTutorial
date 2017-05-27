@@ -32,7 +32,7 @@ RWStructuredBuffer<ParticleData> outputBuffer;
 void ParticleFunction(uint3 id : SV_DispatchThreadID)
 {
 	//First we calculate our position in the buffer, and pull the relevant particle out for computation
-	int idx = id.x + (id.y * thread_group_x * thread_x) + (id.z * thread_group_x * thread_y * thread_group_y * thread_z);
+	int idx = id.x + (id.y * thread_group_x * thread_x) + (id.z * thread_group_x * thread_x * thread_group_y * thread_y);
 	ParticleData ThisParticle = outputBuffer[idx];
 
 	//Let's split up our real-time input data into position and charge
