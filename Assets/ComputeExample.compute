@@ -1,0 +1,94 @@
+﻿// We need to manually mark what our kernel names are
+#pragma kernel ParticleFunction
+
+//let's give ourselves a million threads - 10 * 10 * 10 * 10 * 10 * 10
+#define thread_group_x 10
+#define thread_group_y 10
+#define thread_group_z 10
+#define thread_x 10
+#define thread_y 10
+#define thread_z 10
+
+//controller positions
+float4 LeftController;
+float4 RightController;
+
+//Physics Parameters:
+float Damping;
+float ParticleCharge;
+float ParticleMass;
+float SofteningFactor;
+
+//Note that this has to match EXACTLY the struct we define in ComputeExample.cs!
+struct ParticleData {
+	float3 pos;
+	float3 velocity;
+	float4 color;
+};
+
+RWStructuredBuffer<ParticleData> outputBuffer;
+
+[numthreads(10, 10, 10)]
+void ParticleFunction(uint3 id : SV_DispatchThreadID)
+{
+	//First we calculate our position in the buffer, and pull the relevant particle out for computation
+	int idx = id.x + (id.y * thread_group_x * thread_x) + (id.z * thread_group_x * thread_y * thread_group_y * thread_z);
+	ParticleData ThisParticle = outputBuffer[idx];
+
+	//Let's split up our real-time input data into position and charge
+	float3 LeftPosition = LeftController.xyz;
+	float3 RightPosition = RightController.xyz;
+	float LeftCharge = LeftController.w;
+	float RightCharge = RightController.w;
+
+	//Now let's calculate some values we're going to use multiple times (to save performance)
+	//Note that we add softening factor to distances so that in Coloumb's Law below we don't end up dividing by a very small number, resulting in a ridiculously huge force
+	float3 LeftDisplacement = ThisParticle.pos - LeftPosition;
+	float3 RightDisplacement = ThisParticle.pos - RightPosition;
+	float LeftDistance = length(LeftDisplacement) + SofteningFactor;
+	float RightDistance = length(RightDisplacement) + SofteningFactor;
+
+
+
+
+	//Time for the physics!
+
+	//Coloumb's Law (attraction between two charge particles): F = k * (q1 * q2) / (r^2)
+	//q1 is our controller charge, q2 is our particle charge, and r is the distance value we calculated earlier
+	//we are ignoring k, which is just a scaling constant (it's about 9 billion)
+	//remember that opposites attract!
+	float3 LeftForce = normalize(LeftDisplacement) * ((LeftCharge * ParticleCharge) / (LeftDistance * LeftDistance));
+	float3 RightForce = normalize(RightDisplacement) * ((RightCharge * ParticleCharge) / (RightDistance * RightDistance));
+
+	//And we get a damping force
+	float3 DampingForce = -1.0 * ThisParticle.velocity * Damping;
+
+	//Now we apply the force as acceleration (using newton's second law)
+	ThisParticle.velocity += (LeftForce / ParticleMass);
+	ThisParticle.velocity += (RightForce / ParticleMass);
+	ThisParticle.velocity += (DampingForce / ParticleMass);
+
+	//And we update position
+	ThisParticle.pos += ThisParticle.velocity;
+
+
+
+
+	//Let's colour our particle based on the magnitude of its velocity - almost black at rest, and blue when they're moving
+	float VelocityMagnitude = saturate(length(ThisParticle.velocity) * 80);
+	VelocityMagnitude = VelocityMagnitude * VelocityMagnitude;
+
+	//Let's make it so that if they're going super fast, we make them white
+	float ExtraMagnitude = saturate((VelocityMagnitude - 0.4) * 2);
+	ExtraMagnitude = (ExtraMagnitude * ExtraMagnitude) * 0.9 + VelocityMagnitude * 0.1;
+
+	//So set our very fast value for red and green, and our kinda fast value for blue
+	//Add 0.01 so that the particles are never black
+	ThisParticle.color = float4(ExtraMagnitude + 0.01, ExtraMagnitude + 0.01, VelocityMagnitude + 0.01, 1);
+
+
+
+
+	//And finally, push the updated particle to the buffer
+	outputBuffer[idx] = ThisParticle;
+}
