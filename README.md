@@ -30,3 +30,9 @@ From there, it's pretty self-explanatory, we run a simple implementation of Colo
 If you already know how to write vertex-fragment shaders, this file will look very familiar. The only different is now, rather than passing in a set of vertex data to our vertex function, we pass in an index that refers to an individual item in our buffer, and we run our vertex shader on that instead.
 
 Compute Shaders become much more interesting and powerful when you run them in combination with a Geometry Shader. I'll write a tutorial project for GeometryShaders later. For now, we just output the results of our compute shader as points. With Geometry Shaders, we could output more interesting and complicated geometry.
+
+# Other handy resources
+
+[CG programming wikibook](https://en.wikibooks.org/wiki/Cg_Programming/Unity) - a really good resource for learning the basics of vertex/fragment shader combos in Unity, and a generally good entry point for thinking about shaders
+
+[Simple example of a geometry shader](http://answers.unity3d.com/questions/744622/constructing-a-cube-primitive-using-shader.html) - from a thread where a guy was wanting to make one. Check the last post. It's a good example of the basics of how geometry shaders work, how to generate normals, vertices and triangles and append them to the buffer, and how everything interacts with the vertex/fragment shaders
