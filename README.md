@@ -8,7 +8,7 @@ This project has been designed to teach an aspiring Unity VR developer the very 
 
 # ComputeExample.cs
 
-![ComputeExample.cs Inspector](https://puu.sh/w3l3G/1a86dd6e17.png)
+![ComputeExample.cs Inspector](https://github.com/lachlansleight/ComputeShaderTutorial/blob/master/ComputeExampleInspector.png)
 
 This is the only piece of C# script in the project. There are four important functions:
 
